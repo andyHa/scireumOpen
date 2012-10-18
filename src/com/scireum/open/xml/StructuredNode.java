@@ -21,53 +21,79 @@
  */
 package com.scireum.open.xml;
 
-import java.util.List;
+import com.scireum.open.commons.Value;
+import org.w3c.dom.Node;
 
 import javax.xml.xpath.XPathExpressionException;
-
-import com.scireum.open.commons.Value;
+import java.util.List;
+import java.util.Stack;
 
 /**
- * Represents a structured node, which is part of a {@link StructuredInput}.
+ * Represents a structured node, which is part of a {@link StructuredInput}. <--AHA, is this left over from proprietary version?
  * 
  * @author aha
  * 
  */
 public interface StructuredNode {
-	/**
-	 * Returns a given node at the relative path.
-	 */
-	StructuredNode queryNode(String xpath) throws XPathExpressionException;
 
 	/**
-	 * Returns a list of nodes at the relative path.
-	 */
-	List<StructuredNode> queryNodeList(String xpath)
-			throws XPathExpressionException;
+     * @param xPath relative path at which a {@link StructuredNode} will be extracted from
+     *              current node content.
+     * @return an instance of {@link StructuredNode} or <code>null</code> if evaluation of
+     * given <code>xPath</code> results in <code>null</code>.
+     */
+	StructuredNode queryNode(String xPath) throws XPathExpressionException;
 
 	/**
-	 * Boilerplate for array handling....
-	 */
-	StructuredNode[] queryNodes(String path) throws XPathExpressionException;
+     * @param xPath relative path at which zero-to-many {@link StructuredNode} instances
+     *              will be extracted from current node content.
+     * @return collection of zero-to-many {@link StructuredNode} instances.
+     * never <code>null</code>.
+     */
+	List<StructuredNode> queryNodeList(String xPath) throws XPathExpressionException;
 
 	/**
-	 * Returns a property at the given part.
-	 */
-	String queryString(String path) throws XPathExpressionException;
+     * @see StructuredNode#queryNodeList(String)
+     */
+	StructuredNode[] queryNodes(String xPath) throws XPathExpressionException;
 
 	/**
-	 * Queries a {@link Value} which provides various conversions.
-	 */
-	Value queryValue(String path) throws XPathExpressionException;
+     * @param xPath relative path at which a {@link String} will be extracted from current
+     *              node content.
+     * @return {@link String} representation of content resolved by given <code>xPath</code>
+     * or <code>null</code> if evaluation result is <code>null</code>.
+     */
+	String queryString(String xPath) throws XPathExpressionException;
 
 	/**
-	 * Checks whether a node or non-empty content is reachable via the given
-	 * XPath.
-	 */
-	boolean isEmpty(String path) throws XPathExpressionException;
+     * @param xPath relative path at which a {@link Value} instance will be extracted from
+     *              current node content.
+     * @return {@link Value} representation of content resolved by given <code>xPath</code>.
+     * never <code>null</code>.
+     */
+	Value queryValue(String xPath) throws XPathExpressionException;
 
 	/**
-	 * Returns the current node's name.
+     * @param xPath relative path to test against current node content.
+     * @return <code>true</code> if and only if no content found for given <code>xPath</code>.
+     */
+	boolean isEmpty(String xPath) throws XPathExpressionException;
+
+	/**
+	 * Returns the current node name.
 	 */
 	String getNodeName();
+
+    /**
+     * @return parsed result in its {@link Node} object form.  Useful when creating a
+     * sub-document.
+     */
+    Node getDOMNode();
+
+    /**
+     * @return a collection of {@link SAXElement} representing nodes above this node in
+     * the original document.  Useful when creating a sub-document.
+     */
+    Stack<? extends SAXElement> getPathToOriginalRoot();
+
 }
