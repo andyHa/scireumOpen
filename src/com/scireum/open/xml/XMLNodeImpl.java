@@ -21,81 +21,85 @@
  */
 package com.scireum.open.xml;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.xml.xpath.XPathConstants;
-import javax.xml.xpath.XPathExpressionException;
-import javax.xml.xpath.XPathFactory;
-
+import com.scireum.open.commons.Value;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
-import com.scireum.open.commons.Value;
+import javax.xml.namespace.QName;
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathExpression;
+import javax.xml.xpath.XPathExpressionException;
+import javax.xml.xpath.XPathFactory;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Stack;
 
 /**
- * Default implementation for XMLNode
+ * Default implementation for {@link StructuredNode}.  Wraps instance of {@link Node} that
+ * was extracted from origin document.  Also provides <code>pathToOriginalRoot</code>
+ * which represents the node names above current content in the origin document.
  */
-public class XMLNodeImpl implements StructuredNode {
+final class XMLNodeImpl implements StructuredNode {
 
-	private Node node;
-	private static final XPathFactory XPATH = XPathFactory.newInstance();
+    private static final XPathFactory XPATH = XPathFactory.newInstance();
+    private final Stack<? extends SAXElement> pathToOriginalRoot;
+    private Node node;
 
-	public XMLNodeImpl(Node root) {
-		node = root;
+	public XMLNodeImpl(Stack<? extends SAXElement> pathToOriginalRoot, Node root) {
+        this.pathToOriginalRoot = pathToOriginalRoot;
+        this.node = root;
 	}
 
 	@Override
-	public StructuredNode queryNode(String path)
-			throws XPathExpressionException {
-		Node result = (Node) XPATH.newXPath().compile(path)
-				.evaluate(node, XPathConstants.NODE);
-		if (result == null) {
-			return null;
-		}
-		return new XMLNodeImpl(result);
+	public StructuredNode queryNode(String path) throws XPathExpressionException {
+        Node result = evaluate(path, XPathConstants.NODE);
+        if (result == null) {
+            return null;
+        }
+        return new XMLNodeImpl(this.pathToOriginalRoot, result);
 	}
 
-	@Override
-	public List<StructuredNode> queryNodeList(String path)
-			throws XPathExpressionException {
-		NodeList result = (NodeList) XPATH.newXPath().compile(path)
-				.evaluate(node, XPathConstants.NODESET);
-		List<StructuredNode> resultList = new ArrayList<StructuredNode>(
-				result.getLength());
+    @Override
+	public List<StructuredNode> queryNodeList(String path) throws XPathExpressionException {
+        NodeList result = evaluate(path, XPathConstants.NODESET);
+        if (result == null) {
+            return Collections.emptyList();
+        }
+		List<StructuredNode> resultList = new ArrayList<StructuredNode>(result.getLength());
 		for (int i = 0; i < result.getLength(); i++) {
-			resultList.add(new XMLNodeImpl(result.item(i)));
+			resultList.add(new XMLNodeImpl(this.pathToOriginalRoot, result.item(i)));
 		}
 		return resultList;
 	}
 
 	@Override
-	public StructuredNode[] queryNodes(String path)
-			throws XPathExpressionException {
-		List<StructuredNode> nodes = queryNodeList(path);
+	public StructuredNode[] queryNodes(String xPath) throws XPathExpressionException {
+		List<StructuredNode> nodes = queryNodeList(xPath);
 		return nodes.toArray(new StructuredNode[nodes.size()]);
 	}
 
 	@Override
-	public String queryString(String path) throws XPathExpressionException {
-		Object result = XPATH.newXPath().compile(path)
-				.evaluate(node, XPathConstants.NODE);
+	public String queryString(String xPath) throws XPathExpressionException {
+        Object result = evaluate(xPath, XPathConstants.NODE);
 		if (result == null) {
 			return null;
 		}
 		if (result instanceof Node) {
-			String s = ((Node) result).getTextContent();
-			if (s != null) {
-				return s.trim();
-			}
-			return s;
-		}
-		return result.toString().trim();
+            return trimmedString(((Node)result).getTextContent());
+        }
+		return trimmedString(result.toString());
 	}
 
-	@Override
-	public boolean isEmpty(String path) throws XPathExpressionException {
-		String result = queryString(path);
+    @Override
+    public Value queryValue(String xPath) throws XPathExpressionException {
+        return Value.of(queryString(xPath));
+    }
+
+    @Override
+	public boolean isEmpty(String xPath) throws XPathExpressionException {
+		String result = queryString(xPath);
 		return result == null || "".equals(result);
 	}
 
@@ -104,13 +108,34 @@ public class XMLNodeImpl implements StructuredNode {
 		return node.getNodeName();
 	}
 
-	@Override
+    @Override
+    public Node getDOMNode(){
+        return this.node;
+    }
+
+    @Override
+    public Stack<? extends SAXElement> getPathToOriginalRoot(){
+        return this.pathToOriginalRoot;
+    }
+
+    @Override
 	public String toString() {
 		return getNodeName();
 	}
 
-	@Override
-	public Value queryValue(String path) throws XPathExpressionException {
-		return Value.of(queryString(path));
-	}
+    private <T> T evaluate(String xPathString, QName returnType) throws XPathExpressionException{
+        XPath xPath = XPATH.newXPath();
+        XPathExpression expression = xPath.compile(xPathString);
+        try{
+            //noinspection unchecked
+            return (T)expression.evaluate(this.node, returnType);
+        } finally{
+            xPath.reset();
+        }
+    }
+
+    private static String trimmedString(String s){
+        return (s != null ? s.trim() : s);
+    }
+
 }

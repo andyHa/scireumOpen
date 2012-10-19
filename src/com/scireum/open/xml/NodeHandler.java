@@ -21,10 +21,19 @@
  */
 package com.scireum.open.xml;
 
-/**
- * Called by the XMLReader for a parsed sub-DOM tree.
- */
-public interface NodeHandler {
+import com.scireum.open.xml.exception.StopParsingException;
 
-	void process(StructuredNode node);
+/**
+ * Called by {@link XMLReader} for a parsed sub-DOM tree.
+ */
+public interface NodeHandler{
+
+    /**
+     * @param node wrapping a {@link org.w3c.dom.Node} instance, providing value added
+     *             state and methods.
+     * @throws StopParsingException if the implementation needs to short-circuit document
+     *                              traversal.
+     */
+    void process(StructuredNode node) throws StopParsingException;
+
 }
