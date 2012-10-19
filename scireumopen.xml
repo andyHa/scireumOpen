@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="scireumopen" default="all">
+
+	<property file="local.scireumopen.properties"/>
+  <property file="scireumopen.properties"/>
+  <!-- Uncomment the following property if no tests compilation is needed -->
+  <!--
+  <property name="skip.tests" value="true"/>
+   -->
+
+  <!-- Compiler options -->
+
+  <property name="compiler.debug" value="on"/>
+  <property name="compiler.generate.no.warnings" value="off"/>
+  <property name="compiler.args" value=""/>
+  <property name="compiler.max.memory" value="128m"/>
+  <patternset id="ignored.files">
+    <exclude name="**/.dependency-info/**"/>
+    <exclude name="**/CVS/**"/>
+    <exclude name="**/RCS/**"/>
+    <exclude name="**/SCCS/**"/>
+    <exclude name="**/rcs/**"/>
+    <exclude name="**/.svn/**"/>
+    <exclude name="**/.sbas/**"/>
+    <exclude name="**/.IJI.*/**"/>
+    <exclude name="**/vssver.scc/**"/>
+    <exclude name="**/vssver2.scc/**"/>
+    <exclude name="**/*.pyc/**"/>
+    <exclude name="**/*.pyo/**"/>
+    <exclude name="**/.git/**"/>
+    <exclude name="**/*.hprof/**"/>
+    <exclude name="**/_svn/**"/>
+    <exclude name="**/.hg/**"/>
+    <exclude name="**/*.lib/**"/>
+    <exclude name="**/*~/**"/>
+    <exclude name="**/__pycache__/**"/>
+    <exclude name="**/.bundle/**"/>
+    <exclude name="**/*.rbc/**"/>
+  </patternset>
+  <patternset id="library.patterns">
+    <include name="*.war"/>
+    <include name="*.ear"/>
+    <include name="*.apk"/>
+    <include name="*.zip"/>
+    <include name="*.swc"/>
+    <include name="*.egg"/>
+    <include name="*.jar"/>
+  </patternset>
+  <patternset id="compiler.resources">
+    <include name="**/?*.properties"/>
+    <include name="**/?*.xml"/>
+    <include name="**/?*.gif"/>
+    <include name="**/?*.png"/>
+    <include name="**/?*.jpeg"/>
+    <include name="**/?*.jpg"/>
+    <include name="**/?*.html"/>
+    <include name="**/?*.dtd"/>
+    <include name="**/?*.tld"/>
+  </patternset>
+
+
+  <!-- Global Libraries -->
+
+  <!-- Application Server Libraries -->
+
+  <!-- Modules -->
+
+  <import file="${basedir}/module_scireumopen.xml"/>
+
+  <target name="init" depends="echoBuildProps" description="Build initialization">
+    <!-- Perform any build initialization in this target -->
+  </target>
+
+  <target name="clean" depends="clean.module.scireumopen" description="cleanup all"/>
+
+  <target name="build.modules" depends="init, clean, compile.module.scireumopen" description="build all modules"/>
+
+  <target name="all" depends="build.modules" description="build all"/>
+
+  <target name="echoBuildProps">
+  	<echo>-----BUILD PROPERTIES-----</echo>
+  	<echo>path.user.home=${path.user.home}</echo>
+  	<echo>dir.tmp=${dir.tmp}</echo>
+  	<echo>dir.lib.tests=${dir.lib.tests}</echo>
+  	<echo>path.user.home=${path.user.home}</echo>
+  	<echo>path.variable.maven_repository=${path.variable.maven_repository}</echo>
+	</target>
+
+</project>

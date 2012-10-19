@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="module_scireumopen" default="compile.module.scireumopen">
+  <dirname property="module.scireumopen.basedir" file="${ant.file.module_scireumopen}"/>
+
+  <property name="compiler.args.scireumopen" value="${compiler.args}"/>
+
+  <property name="scireumopen.output.dir" value="${module.scireumopen.basedir}/bin"/>
+  <property name="scireumopen.testoutput.dir" value="${module.scireumopen.basedir}/bin-tests"/>
+
+  <path id="scireumopen.module.bootclasspath">
+    <!-- Paths to be included in compilation bootclasspath -->
+  </path>
+
+  <path id="scireumopen.module.production.classpath">
+    <pathelement location="${basedir}/libs/commons-collections-3.1.jar"/>
+    <pathelement location="${dir.lib.tests}/junit.jar"/>
+  </path>
+
+  <path id="scireumopen.runtime.production.module.classpath">
+    <pathelement location="${scireumopen.output.dir}"/>
+    <pathelement location="${basedir}/libs/commons-collections-3.1.jar"/>
+    <pathelement location="${dir.lib.tests}/junit.jar"/>
+  </path>
+
+  <path id="scireumopen.module.classpath">
+    <pathelement location="${scireumopen.output.dir}"/>
+    <pathelement location="${basedir}/libs/commons-collections-3.1.jar"/>
+    <pathelement location="${dir.lib.tests}/junit.jar"/>
+  </path>
+
+  <path id="scireumopen.runtime.module.classpath">
+    <pathelement location="${scireumopen.output.dir}"/>
+    <pathelement location="${basedir}/libs/commons-collections-3.1.jar"/>
+    <pathelement location="${dir.lib.tests}/junit.jar"/>
+  </path>
+
+  <patternset id="excluded.from.module.scireumopen">
+    <patternset refid="ignored.files"/>
+  </patternset>
+
+  <patternset id="excluded.from.compilation.scireumopen">
+    <patternset refid="excluded.from.module.scireumopen"/>
+  </patternset>
+
+  <path id="scireumopen.module.sourcepath">
+    <dirset dir="${module.scireumopen.basedir}">
+      <include name="src"/>
+    </dirset>
+  </path>
+
+  <path id="scireumopen.module.test.sourcepath">
+    <dirset dir="${module.scireumopen.basedir}">
+      <include name="src-tests"/>
+    </dirset>
+  </path>
+
+  <target name="compile.module.scireumopen" depends="compile.module.scireumopen.production,compile.module.scireumopen.tests" description="Compile module scireumOpen"/>
+
+  <target name="compile.module.scireumopen.production" description="Compile module scireumOpen; production classes">
+    <mkdir dir="${scireumopen.output.dir}"/>
+    <javac destdir="${scireumopen.output.dir}" debug="${compiler.debug}" nowarn="${compiler.generate.no.warnings}" memorymaximumsize="${compiler.max.memory}" fork="true">
+      <compilerarg line="${compiler.args.scireumopen}"/>
+      <bootclasspath refid="scireumopen.module.bootclasspath"/>
+      <classpath refid="scireumopen.module.production.classpath"/>
+      <src refid="scireumopen.module.sourcepath"/>
+      <patternset refid="excluded.from.compilation.scireumopen"/>
+    </javac>
+
+    <copy todir="${scireumopen.output.dir}">
+      <fileset dir="${module.scireumopen.basedir}/src">
+        <patternset refid="compiler.resources"/>
+        <type type="file"/>
+      </fileset>
+    </copy>
+  </target>
+
+  <target name="compile.module.scireumopen.tests" depends="compile.module.scireumopen.production" description="compile module scireumOpen; test classes" unless="skip.tests">
+    <mkdir dir="${scireumopen.testoutput.dir}"/>
+    <javac destdir="${scireumopen.testoutput.dir}" debug="${compiler.debug}" nowarn="${compiler.generate.no.warnings}" memorymaximumsize="${compiler.max.memory}" fork="true">
+      <compilerarg line="${compiler.args.scireumopen}"/>
+      <bootclasspath refid="scireumopen.module.bootclasspath"/>
+      <classpath refid="scireumopen.module.classpath"/>
+      <src refid="scireumopen.module.test.sourcepath"/>
+      <patternset refid="excluded.from.compilation.scireumopen"/>
+    </javac>
+
+    <copy todir="${scireumopen.testoutput.dir}">
+      <fileset dir="${module.scireumopen.basedir}/src-tests">
+        <patternset refid="compiler.resources"/>
+        <type type="file"/>
+      </fileset>
+    </copy>
+  </target>
+
+  <target name="clean.module.scireumopen" description="cleanup module">
+    <delete dir="${scireumopen.output.dir}"/>
+    <delete dir="${scireumopen.testoutput.dir}"/>
+  </target>
+</project>
