@@ -21,13 +21,13 @@
  */
 package examples;
 
-import java.io.FileInputStream;
-
-import javax.xml.xpath.XPathExpressionException;
-
 import com.scireum.open.xml.NodeHandler;
 import com.scireum.open.xml.StructuredNode;
 import com.scireum.open.xml.XMLReader;
+import com.scireum.open.xml.exception.StopParsingException;
+
+import javax.xml.xpath.XPathExpressionException;
+import java.io.FileInputStream;
 
 /**
  * Small example class which show how to use the {@link XMLReader}.
@@ -42,7 +42,7 @@ public class ExampleXML {
 		r.addHandler("node", new NodeHandler() {
 
 			@Override
-			public void process(StructuredNode node) {
+			public void process(StructuredNode node) throws StopParsingException{
 				try {
 					// We can now conveniently query the sub-dom of each node
 					// using XPATH:

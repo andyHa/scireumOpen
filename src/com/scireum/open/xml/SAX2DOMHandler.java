@@ -21,71 +21,36 @@
  */
 package com.scireum.open.xml;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-
 import org.w3c.dom.DOMException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.ProcessingInstruction;
 import org.xml.sax.Attributes;
+import org.xml.sax.SAXException;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import java.util.Stack;
 
 /**
  * Used to create a dom-tree for incoming nodes.
  */
-class SAX2DOMHandler {
+final class SAX2DOMHandler {
 
-	private Document document;
-	private Node root;
-	private Node currentNode;
-	private NodeHandler nodeHandler;
-
-	public SAX2DOMHandler(NodeHandler handler, String uri, String name,
-			Attributes attributes) throws ParserConfigurationException {
+	public SAX2DOMHandler(
+        NodeHandler handler, String uri, String name, Attributes attributes
+    ) throws ParserConfigurationException {
 		this.nodeHandler = handler;
 		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 		DocumentBuilder loader = factory.newDocumentBuilder();
-		document = loader.newDocument();
+		this.document = loader.newDocument();
 		createElement(name, attributes);
 	}
 
-	private boolean nodeUp() {
-		if (isComplete()) {
-			nodeHandler.process(new XMLNodeImpl(root));
-			return true;
-		}
-		currentNode = currentNode.getParentNode();
-		return false;
-	}
-
-	private boolean isComplete() {
-		return currentNode.equals(root);
-	}
-
-	private void createElement(String name, Attributes attributes) {
-		Element element = document.createElement(name);
-		for (int i = 0; i < attributes.getLength(); i++) {
-			String attrName = attributes.getLocalName(i);
-			if (attrName == null || "".equals(attrName)) {
-				attrName = attributes.getQName(i);
-			}
-			if (attrName != null || !"".equals(attrName)) {
-				element.setAttribute(attrName, attributes.getValue(i));
-			}
-		}
-		if (currentNode != null) {
-			currentNode.appendChild(element);
-		} else {
-			root = element;
-			document.appendChild(element);
-		}
-		currentNode = element;
-	}
-
 	public Node getRoot() {
-		return root;
+		return this.root;
 	}
 
 	public void startElement(String uri, String name, Attributes attributes) {
@@ -93,25 +58,66 @@ class SAX2DOMHandler {
 	}
 
 	public void processingInstruction(String target, String data) {
-		ProcessingInstruction instruction = document
-				.createProcessingInstruction(target, data);
-		currentNode.appendChild(instruction);
+		ProcessingInstruction instruction =
+            this.document.createProcessingInstruction(target, data);
+		this.currentNode.appendChild(instruction);
 	}
 
-	public boolean endElement(String uri, String name) {
+	public boolean endElement(
+        Stack<? extends SAXElement> pathToGlobalRoot, String uri, String name
+    ) throws SAXException {
 		if (!currentNode.getNodeName().equals(name)) {
 			throw new DOMException(DOMException.SYNTAX_ERR,
 					"Unexpected end-tag: " + name + " expected: "
 							+ currentNode.getNodeName());
 		}
-		return nodeUp();
+		return nodeUp(pathToGlobalRoot);
 	}
 
 	public void text(String data) {
-		currentNode.appendChild(document.createTextNode(data));
+        this.currentNode.appendChild(this.document.createTextNode(data));
 	}
 
 	public NodeHandler getNodeHandler() {
-		return nodeHandler;
+		return this.nodeHandler;
 	}
+
+    private NodeHandler nodeHandler;
+    private Document document;
+    private Node root;
+    private Node currentNode;
+
+    private boolean nodeUp(Stack<? extends SAXElement> pathToOriginalRoot) throws SAXException{
+        if(isComplete()){
+            this.nodeHandler.process(new XMLNodeImpl(pathToOriginalRoot, this.root));
+            return true;
+        }
+        this.currentNode = this.currentNode.getParentNode();
+        return false;
+    }
+
+    private boolean isComplete(){
+        return this.currentNode.equals(this.root);
+    }
+
+    private void createElement(String name, Attributes attributes){
+        Element element = this.document.createElement(name);
+        for(int i = 0; i < attributes.getLength(); i++){
+            String attrName = attributes.getLocalName(i);
+            if(attrName == null || "".equals(attrName)){
+                attrName = attributes.getQName(i);
+            }
+            if(attrName != null || !"".equals(attrName)){
+                element.setAttribute(attrName, attributes.getValue(i));
+            }
+        }
+        if(this.currentNode != null){
+            this.currentNode.appendChild(element);
+        } else{
+            this.root = element;
+            this.document.appendChild(element);
+        }
+        this.currentNode = element;
+    }
+
 }
